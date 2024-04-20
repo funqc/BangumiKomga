@@ -1,5 +1,5 @@
-config.py
-recordsRefreshed.db
+config/config.py
+config/recordsRefreshed.db
 refreshMetadata.log
 __pycache__/
 .vscode

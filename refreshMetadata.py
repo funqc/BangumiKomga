@@ -1,5 +1,7 @@
 
 import re
+import json
+from pathlib import Path
 from tools.getTitle import get_title
 import processMetadata
 from time import strftime, localtime
@@ -61,14 +63,25 @@ def refresh_metadata(force_refresh_list=[]):
                 logger.debug("skip falied series: "+series_name)
                 continue
 
-        # Get the subject id from the Correct Bgm Link (CBL) if it exists
+        # Get the subject id from series.json on series folder
         subject_id = None
-        for link in series['metadata']['links']:
-            if link['label'].lower() == "cbl":
-                subject_id = link['url'].split("/")[-1]
-                # Get the metadata for the series from bangumi
-                metadata = bgm.get_subject_metadata(subject_id)
-                break
+        series_json = Path(series['url']).joinpath("series.json")
+        if series_json.exists():
+            with series_json.open('r', encoding='utf8') as f:
+                series_json = json.load(f)
+                if "bgm_url" in series_json:
+                    subject_id = series_json['bgm_url'].split("/")[-1]
+                    # Get the metadata for the series from bangumi
+                    metadata = bgm.get_subject_metadata(subject_id)
+
+        # Get the subject id from the Correct Bgm Link (CBL) if it exists
+        if subject_id == None:
+            for link in series['metadata']['links']:
+                if link['label'].lower() == "cbl":
+                    subject_id = link['url'].split("/")[-1]
+                    # Get the metadata for the series from bangumi
+                    metadata = bgm.get_subject_metadata(subject_id)
+                    break
 
         # Use the bangumi API to search for the series by title on komga
         if subject_id == None:
